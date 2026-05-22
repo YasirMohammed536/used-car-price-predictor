@@ -216,16 +216,3 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-# Ignore local Python runtime files
-__pycache__/
-*.pyc
-
-# Ignore large raw and processed datasets
-data/*.csv
-
-# Ignore compiled binary machine learning models
-model/*.pkl
-
-# Ignore local virtual environments
-venv/
-.env
