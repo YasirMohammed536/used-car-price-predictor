@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valuation Interface | Machine Learning Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .premium-glass-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.45) 0%, rgba(30, 41, 59, 0.55) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="text-slate-100 antialiased flex items-center justify-center p-4 md:p-8"
+      style="background: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed; background-size: cover; min-height: 100vh;">
+
+    <div class="w-full max-w-4xl premium-glass-card rounded-2xl p-6 md:p-10 my-6">
+        
+        <div class="text-center mb-10">
+            <span class="px-3 py-1 rounded-full text-[10px] font-mono font-semibold bg-white/10 text-white border border-white/20 uppercase tracking-[0.2em]">Ensemble Predictive System</span>
+            <h1 class="text-3xl md:text-4xl font-extralight tracking-[0.05em] mt-4 text-white font-sans uppercase drop-shadow-sm">Vehicle Market Estimator</h1>
+            <div class="w-12 h-[1px] bg-white/30 mx-auto mt-3"></div>
+            <p class="text-slate-200/80 mt-3 text-xs md:text-sm max-w-lg mx-auto font-light tracking-wide drop-shadow-xs">Evaluate vehicle intrinsic market valuations using a fine-tuned Random Forest model trained across 14,500+ listings.</p>
+        </div>
+
+        {% if prediction_text %}
+        <div class="mb-8 p-6 rounded-xl bg-slate-950/30 border border-white/20 text-center shadow-lg">
+            <h4 class="text-[10px] uppercase font-mono tracking-[0.2em] text-slate-300">Calculated Intrinsic Value</h4>
+            <div class="text-4xl md:text-6xl font-normal mt-2 text-white tracking-tight drop-shadow font-mono">
+                {{ prediction_text }}
+            </div>
+        </div>
+        {% endif %}
+
+        <form action="/predict" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Manufacturing Year</label>
+                <input type="number" name="year" min="1995" max="2024" 
+                       value="{{ request.form['year'] if request.form['year'] else '2018' }}" required 
+                       class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Odometer (Kilometers Driven)</label>
+                <input type="number" name="kilometers" min="0" 
+                       value="{{ request.form['kilometers'] if request.form['kilometers'] else '48000' }}" required 
+                       class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Transmission Configuration</label>
+                <select name="transmission" required class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+                    <option value="1" class="bg-slate-900 text-white" {% if request.form['transmission'] == '1' %}selected{% endif %}>Manual Gearbox</option>
+                    <option value="0" class="bg-slate-900 text-white" {% if request.form['transmission'] == '0' %}selected{% endif %}>Automatic Transmission</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Ownership Status Record</label>
+                <select name="owner_type" required class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+                    <option value="1" class="bg-slate-900 text-white" {% if request.form['owner_type'] == '1' %}selected{% endif %}>First Owner</option>
+                    <option value="2" class="bg-slate-900 text-white" {% if request.form['owner_type'] == '2' %}selected{% endif %}>Second Owner</option>
+                    <option value="3" class="bg-slate-900 text-white" {% if request.form['owner_type'] == '3' %}selected{% endif %}>Third Owner</option>
+                    <option value="4" class="bg-slate-900 text-white" {% if request.form['owner_type'] == '4' %}selected{% endif %}>Fourth Owner or Above</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Vehicle Brand Manufacturer</label>
+                <select name="brand" id="brand-select" required class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+                    {% for brand in brands %}
+                    <option value="{{ brand }}" class="bg-slate-900 text-white" {% if selected_brand == brand %}selected{% endif %}>
+                        {% if brand == 'other' %}
+                            OTHER BRANDS (Audi, Jeep, Kia...)
+                        {% else %}
+                            {{ brand | upper }}
+                        {% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Vehicle Variant Designation</label>
+                <select name="model" id="model-select" required class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+                    <option value="" class="bg-slate-900 text-slate-400">Select manufacturer first</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="text-[10px] font-bold text-slate-200 uppercase tracking-widest drop-shadow-xs">Engine Fuel Infrastructure</label>
+                <select name="fuel" required class="w-full bg-slate-950/40 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors duration-200 text-sm tracking-wide">
+                    <option value="Petrol" class="bg-slate-900 text-white" {% if request.form['fuel'] == 'Petrol' %}selected{% endif %}>Petrol Engine</option>
+                    <option value="Diesel" class="bg-slate-900 text-white" {% if request.form['fuel'] == 'Diesel' %}selected{% endif %}>Diesel Drive System</option>
+                    <option value="Hybrid/CNG" class="bg-slate-900 text-white" {% if request.form['fuel'] == 'Hybrid/CNG' %}selected{% endif %}>Eco CNG / Hybrid Setup</option>
+                    <option value="Other" class="bg-slate-900 text-white" {% if request.form['fuel'] == 'Other' %}selected{% endif %}>Alternative Fuel System</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-2 mt-4">
+                <button type="submit" class="w-full bg-slate-900/60 hover:bg-white hover:text-slate-950 text-white font-medium py-4 px-6 rounded-lg transition-all duration-300 shadow-xl cursor-pointer text-xs uppercase tracking-[0.2em] font-mono border border-white/20">
+                    Predict the Price
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const brandModelMap = {{ brand_model_map | tojson | safe }};
+        const brandSelect = document.getElementById('brand-select');
+        const modelSelect = document.getElementById('model-select');
+        
+        // Grab the server-passed selected model variable to lock it down post-submit
+        const previouslySelectedModel = "{{ selected_model or '' }}";
+
+        function updateModels() {
+            const selectedBrand = brandSelect.value;
+            modelSelect.innerHTML = '';
+            const models = brandModelMap[selectedBrand] || [];
+            
+            if (models.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'No variants available';
+                opt.className = 'bg-slate-900 text-slate-400';
+                modelSelect.appendChild(opt);
+                return;
+            }
+            
+            models.forEach(model => {
+                const opt = document.createElement('option');
+                opt.value = model;
+                opt.textContent = model;
+                opt.className = 'bg-slate-900 text-white';
+                
+                // Matches the variant accurately on page refresh
+                if (model === previouslySelectedModel) {
+                    opt.selected = true;
+                }
+                modelSelect.appendChild(opt);
+            });
+        }
+
+        brandSelect.addEventListener('change', updateModels);
+        window.addEventListener('DOMContentLoaded', updateModels);
+    </script>
+</body>
+</html>
