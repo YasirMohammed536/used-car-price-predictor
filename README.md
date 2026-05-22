@@ -1,5 +1,7 @@
 # Used Car Price Predictor
 
+![Application Interface](screenshot.png)
+
 An end-to-end machine learning project that predicts used car resale 
 prices in the Indian market. Includes a locally deployable Flask web 
 application with a stateful frontend interface built with Tailwind CSS.
